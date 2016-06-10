@@ -3736,7 +3736,7 @@ _.extend(Workbook.prototype, {
     },
     
     /**
-     * Set number of rows to repeat for this sheet.
+     * Set number of columns to repeat for this sheet.
      * 
      * @param {String} sheet name
      * @param {int} number of columns to repeat from the left
@@ -3750,7 +3750,7 @@ _.extend(Workbook.prototype, {
     		this.printTitles[inSheet] = {};
     	}
     	//WARN: this does not handle AA, AB, etc.
-    	this.printTitles[inSheet].left = String.fromCharCode(64 + inRowCount);
+    	this.printTitles[inSheet].left = String.fromCharCode(64 + inColumn);
     },
 
     addMedia: function (type, fileName, fileData, contentType) {
@@ -3895,7 +3895,7 @@ _.extend(Workbook.prototype, {
         	if (entry.top) {
         		value += name + "!$1:$" + entry.top;
         		if (entry.left) {
-        			value += ","
+        			value += ",";
         		}
         	}
         	if (entry.left) {
@@ -4218,6 +4218,12 @@ var SheetView = require('./SheetView');
             formulaValue.appendChild(doc.createTextNode("--temp--"));
             formulaNode.appendChild(formulaValue);
             
+            var formulaArrayNode = doc.createElement('c');
+            var formulaArrayValue = doc.createElement('f');
+            formulaArrayValue.appendChild(doc.createTextNode("--temp--"));
+            formulaArrayValue.setAttribute('t', 'array');
+            formulaArrayNode.appendChild(formulaArrayValue);
+            
             var stringNode = doc.createElement('c');
             stringNode.setAttribute('t', 's');
             var stringValue = doc.createElement('v');
@@ -4229,7 +4235,8 @@ var SheetView = require('./SheetView');
                 number: numberNode,
                 date: numberNode,
                 string: stringNode,
-                formula: formulaNode
+                formula: formulaNode,
+                formulaArray: formulaArrayNode
             };
         },
         
@@ -4317,6 +4324,11 @@ var SheetView = require('./SheetView');
                             cell = cellCache.formula.cloneNode(true);
                             cell.firstChild.firstChild.nodeValue = cellValue;
                             break;
+                        case "formulaArray":
+                        	cell = cellCache.formulaArray.cloneNode(true);
+                        	cell.firstChild.firstChild.nodeValue = cellValue;
+                        	cell.firstChild.setAttribute('ref', util.positionToLetterRef(c+1, row+1));
+                        	break;
                         case "text":
                             /*falls through*/
                         default:
@@ -4490,21 +4502,21 @@ var SheetView = require('./SheetView');
         exportPageSettings: function (doc, worksheet) {
             if(this._margin) {
             	var defaultVal = 0.7;
-            	var left = this._margin.left?this._margin.left:defaultVal;;
-            	var right = this._margin.right?this._margin.right:defaultVal;;
+            	var left = this._margin.left?this._margin.left:defaultVal;
+            	var right = this._margin.right?this._margin.right:defaultVal;
             	var top = this._margin.top?this._margin.top:defaultVal;
             	var bottom = this._margin.bottom?this._margin.bottom:defaultVal;
             	defaultVal = 0.3;
-            	var header = this._margin.header?this._margin.header:defaultVal;;
-            	var footer = this._margin.footer?this._margin.footer:defaultVal;;
+            	var header = this._margin.header?this._margin.header:defaultVal;
+            	var footer = this._margin.footer?this._margin.footer:defaultVal;
             	
             	worksheet.appendChild(util.createElement(doc, 'pageMargins', [
-                    ['top', top]
-                    , ['bottom', bottom]
-                    , ['left', left]
-                    , ['right', right]
-                    , ['header', header]
-                    , ['footer', footer]
+                    ['top', top], 
+                    ['bottom', bottom], 
+                    ['left', left], 
+                    ['right', right], 
+                    ['header', header], 
+                    ['footer', footer]
                 ]));
             }
             if(this._orientation) {
@@ -4542,18 +4554,6 @@ var SheetView = require('./SheetView');
          */
         setPageMargin: function (input) {
         	this._margin = input;
-        },
-        
-        /**
-         * http://www.schemacentral.com/sc/ooxml/t-ssml_ST_Orientation.html
-         * 
-         * Can be one of 'portrait' or 'landscape'.
-         * 
-         * @param {String} orientation
-         * @returns {undefined}
-         */
-        setPageOrientation: function (orientation) {
-            this._orientation = orientation;
         },
         
         /**

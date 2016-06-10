@@ -70,7 +70,7 @@ _.extend(Workbook.prototype, {
     },
     
     /**
-     * Set number of rows to repeat for this sheet.
+     * Set number of columns to repeat for this sheet.
      * 
      * @param {String} sheet name
      * @param {int} number of columns to repeat from the left
@@ -84,7 +84,7 @@ _.extend(Workbook.prototype, {
     		this.printTitles[inSheet] = {};
     	}
     	//WARN: this does not handle AA, AB, etc.
-    	this.printTitles[inSheet].left = String.fromCharCode(64 + inRowCount);
+    	this.printTitles[inSheet].left = String.fromCharCode(64 + inColumn);
     },
 
     addMedia: function (type, fileName, fileData, contentType) {
@@ -229,7 +229,7 @@ _.extend(Workbook.prototype, {
         	if (entry.top) {
         		value += name + "!$1:$" + entry.top;
         		if (entry.left) {
-        			value += ","
+        			value += ",";
         		}
         	}
         	if (entry.left) {
